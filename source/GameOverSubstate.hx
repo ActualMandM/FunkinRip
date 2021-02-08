@@ -65,7 +65,10 @@ class GameOverSubstate extends MusicBeatSubstate
 			FlxG.sound.music.stop();
 
 			if (PlayState.isStoryMode)
+			{
+				PlayState.hasRestarted = false;
 				FlxG.switchState(new StoryMenuState());
+			}
 			else
 				FlxG.switchState(new FreeplayState());
 		}
@@ -107,6 +110,11 @@ class GameOverSubstate extends MusicBeatSubstate
 			{
 				FlxG.camera.fade(FlxColor.BLACK, 2, false, function()
 				{
+					if (PlayState.isStoryMode)
+					{
+						PlayState.hasRestarted = true;
+					}
+
 					FlxG.switchState(new PlayState());
 				});
 			});
