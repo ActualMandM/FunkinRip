@@ -171,13 +171,16 @@ class DialogueBox extends FlxSpriteGroup
 			dialogueStarted = true;
 		}
 
-		if (FlxG.keys.justPressed.ANY)
+		// PR 357 by lotusotho
+		// if (FlxG.keys.justPressed.ANY)
+		if (FlxG.keys.justPressed.ANY && dialogueStarted == true)
 		{
 			remove(dialogue);
 
 			FlxG.sound.play('assets/sounds/clickText' + TitleState.soundExt, 0.8);
 
-			if (dialogueList[1] == null)
+			// if (dialogueList[1] == null)
+			if (dialogueList[1] == null && dialogueList[0] != null)
 			{
 				if (!isEnding)
 				{
