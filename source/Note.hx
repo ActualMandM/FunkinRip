@@ -3,6 +3,7 @@ package;
 import flixel.FlxSprite;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.math.FlxMath;
+import flixel.math.FlxRandom;
 import flixel.util.FlxColor;
 import polymod.format.ParseRules.TargetSignatureElement;
 
@@ -30,6 +31,10 @@ class Note extends FlxSprite
 	public static var BLUE_NOTE:Int = 1;
 	public static var RED_NOTE:Int = 3;
 
+	//for autoplay
+	public var autoHP:Int = 1;
+	public var canRelease:Bool = true;
+
 	public function new(strumTime:Float, noteData:Int, ?prevNote:Note, ?sustainNote:Bool = false)
 	{
 		super();
@@ -46,6 +51,9 @@ class Note extends FlxSprite
 		this.strumTime = strumTime;
 
 		this.noteData = noteData;
+
+		var rand = new FlxRandom();
+		this.autoHP = isSustainNote ? 0 : rand.int(0, 3) + rand.int(0, 3); //prioritize perfect notes
 
 		var daStage:String = PlayState.curStage;
 

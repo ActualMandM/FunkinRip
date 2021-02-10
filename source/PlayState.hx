@@ -22,6 +22,7 @@ import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
+import flixel.math.FlxRandom;
 import flixel.math.FlxRect;
 import flixel.system.FlxSound;
 import flixel.text.FlxText;
@@ -122,6 +123,15 @@ class PlayState extends MusicBeatState
 	public static var daPixelZoom:Float = 6;
 
 	var inCutscene:Bool = false;
+
+	//autoplay thing
+	var autoplay:Bool = true;
+	var perfectAuto:Bool = false;
+	var hold:Array<Int> = [0, 0, 0, 0];
+	var strumChecked:Array<Bool> = [false, false, false, false];
+	var canRelease:Array<Bool> = [true, true, true, true];
+	var strumRelease:Array<Bool> = [false, false, false, false];
+	var rand = new FlxRandom();
 
 	override public function create()
 	{
@@ -1053,6 +1063,8 @@ class PlayState extends MusicBeatState
 				for (susNote in 0...Math.floor(susLength))
 				{
 					oldNote = unspawnNotes[Std.int(unspawnNotes.length - 1)];
+					//for autoplay: the oldNote is a sustain note, set canRelease to false so dont release early
+					oldNote.canRelease = false;
 
 					var sustainNote:Note = new Note(daStrumTime + (Conductor.stepCrochet * susNote) + Conductor.stepCrochet, daNoteData, oldNote, true);
 					sustainNote.scrollFactor.set();
@@ -1329,6 +1341,16 @@ class PlayState extends MusicBeatState
 		if (FlxG.keys.justPressed.SEVEN)
 		{
 			FlxG.switchState(new ChartingState());
+		}
+
+		if (FlxG.keys.justPressed.C)
+		{
+			autoplay = !autoplay;
+		}
+	
+		if (FlxG.keys.justPressed.P)
+		{
+			perfectAuto = !perfectAuto;
 		}
 
 		// FlxG.watch.addQuick('VOL', vocals.amplitudeLeft);
@@ -1880,6 +1902,109 @@ class PlayState extends MusicBeatState
 		var rightR = controls.RIGHT_R;
 		var downR = controls.DOWN_R;
 		var leftR = controls.LEFT_R;
+
+		//====== EPIC AUTOPLAY ======//
+		if (autoplay) {
+			// yeet the player input
+			up = right = down = left = false;
+			upP = rightP = downP = leftP = false;
+			upR = rightR = downR = leftR = false;
+			notes.forEachAlive(function(daNote:Note) 
+			{
+				// found a note that can be hit
+				if (daNote.canBeHit && daNote.mustPress && !daNote.tooLate) {
+					// there is a HP counter to randomize press time
+					// subtract HP regardless of holding or not to ensure notes dont get ignored
+					if (daNote.autoHP > 0) {
+						// in perfect mode, speed up hp drain
+						daNote.autoHP -= perfectMode ? 4 : 1;
+					}
+					// else, found a note that can be hit
+					// strumChecked makes autoplay only respond to one note per channel
+					// TODO sort?
+					else if (!strumChecked[daNote.noteData]) {
+						strumChecked[daNote.noteData] = true;
+						strumRelease[daNote.noteData] = false;
+						// if currently holding
+						if (hold[daNote.noteData] > 1) {
+							// if holding normal note or last sustain note (canRelease)
+							// release in order to press next frame
+							if (canRelease[daNote.noteData])
+								hold[daNote.noteData] = -1;
+							// else, holding sustain notes, keep holding
+						}
+						else if (hold[daNote.noteData] == 0) { //prevent a previous note in notes setting to -1
+							hold[daNote.noteData] = 1;
+						}
+					}
+					// check if need to keep "pressing" this key for the next note
+					strumRelease[daNote.noteData] = strumRelease[daNote.noteData] || daNote.canRelease;
+				}
+			});
+			// do release checking
+			//playerStrums.forEach(function(spr:FlxSprite) {
+			//	var idx = spr.ID;
+			for(idx in 0...4) {
+				canRelease[idx] = strumRelease[idx];
+				// if hold is 1, press
+				var debug_arrow = '';
+				switch (idx) {
+					case 2: debug_arrow = 'up';
+					case 3: debug_arrow = 'right';
+					case 1: debug_arrow = 'down';
+					case 0: debug_arrow = 'left';
+				}
+				//FlxG.watch.addQuick("hold " + debug_arrow, hold[idx]);
+				//FlxG.watch.addQuick("rel " + debug_arrow, canRelease[idx]);
+
+				if (hold[idx] == 1) {
+					switch (idx) {
+						case 2: upP = true;
+						case 3: rightP = true;
+						case 1: downP = true;
+						case 0: leftP = true;
+					}
+					//FlxG.log.add('PRESS ' + debug_arrow);
+					hold[idx] = 2;
+				}
+				// if hold is > 1, hold
+				if (hold[idx] > 1) {
+					switch (idx) {
+						case 2: up = true;
+						case 3: right = true;
+						case 1: down = true;
+						case 0: left = true;
+					}
+					//FlxG.log.add('HOLD ' + debug_arrow + ' ' + hold[idx]);
+				}
+				// adding a second check if hold is somehow < 1 but the animation is still active (removed)
+				if (hold[idx] > 1/* || spr.animation.curAnim.name == 'confirm'*/) {
+					// increment hold value until it reaches a random threshold
+					// if the button cannot be released yet (sustain note), ignore
+					// in perfect mode release quickly
+					if (canRelease[idx]) {
+						hold[idx] += 1;
+						if (hold[idx] >= (perfectAuto ? rand.int(4, 7) : rand.int(10, 20))) {
+							hold[idx] = -1;
+						}
+					}
+				}
+				// if hold is -1, release
+				if (hold[idx] == -1) {
+					switch (idx) {
+						case 2: upR = true;
+						case 3: rightR = true;
+						case 1: downR = true;
+						case 0: leftR = true;
+					}
+					//FlxG.log.add('RELEASE ' + debug_arrow);
+					hold[idx] = 0;
+				}
+				// reset strumcheck for next frame
+				strumChecked[idx] = false;
+			}//);
+		}
+		//====== EPIC AUTOPLAY ======//
 
 		var controlArray:Array<Bool> = [leftP, downP, upP, rightP];
 
