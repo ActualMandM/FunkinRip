@@ -53,7 +53,18 @@ class Note extends FlxSprite
 		this.noteData = noteData;
 
 		var rand = new FlxRandom();
-		this.autoHP = isSustainNote ? 0 : rand.int(0, 3) + rand.int(0, 3); //prioritize perfect notes
+		if (isSustainNote) {
+			this.autoHP = 0;
+		}
+		else {
+			this.autoHP = Std.int(rand.floatNormal(3.5, 1));
+			this.autoHP = this.autoHP < 0 ? 0 : this.autoHP;
+			this.autoHP = this.autoHP > 6 ? 6 : this.autoHP;
+			// hacky shit
+			if (!prevNote.isSustainNote) 
+				this.autoHP = Std.int(cast(this.autoHP, Float) / 2.0 + cast(prevNote.autoHP, Float) / 2.0);
+		}
+		//this.autoHP = isSustainNote ? 0 : rand.int(0, 3) + rand.int(0, 3); //prioritize perfect notes
 
 		var daStage:String = PlayState.curStage;
 
