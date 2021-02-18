@@ -2,7 +2,6 @@
 <project>
 	<!-- _________________________ Application Settings _________________________ -->
 
-<<<<<<< HEAD
 	<!-- <app title="Friday Night Funkin'" file="Funkin" packageName="com.ninjamuffin99.funkin" main="Main" version="0.2.7.1" company="ninjamuffin99" /> -->
 	<app title="Friday Night Fuckin'" file="FunkinRip" packageName="com.ninjamuffin99.funkin" main="Main" version="0.2.7.1" company="ninjamuffin99" />
 
