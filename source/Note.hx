@@ -32,8 +32,34 @@ class Note extends FlxSprite
 	public static var RED_NOTE:Int = 3;
 
 	//for autoplay
+	public var initHP:Bool = false;
 	public var autoHP:Int = 1;
 	public var canRelease:Bool = true;
+	public static var delayMin:Int = 0;
+	public static var delayMax:Int = 7;
+	public static var delayStd:Float = 1.0;
+	public function initDelay(perfect:Bool) {
+		// if initHP is false, call this function
+		var rand = new FlxRandom();
+		if (isSustainNote) {
+			this.autoHP = 0;
+		}
+		else if (perfect) {
+			this.autoHP = 2;
+		}
+		else {
+			var delayMean = cast(delayMin + delayMax, Float) / 2.0;
+			this.autoHP = Math.round(rand.floatNormal(delayMean, delayStd));
+			this.autoHP = this.autoHP < delayMin ? delayMin : this.autoHP;
+			this.autoHP = this.autoHP > delayMax ? delayMax : this.autoHP;
+			// hacky shit
+			// made weight of prevNote 33% to lessen impact
+			if (!prevNote.isSustainNote) 
+				this.autoHP = Math.round(cast(this.autoHP, Float) / 1.5 + cast(prevNote.autoHP, Float) / 3.0);
+		}
+		initHP = true;
+		//trace(autoHP);
+	}
 
 	public function new(strumTime:Float, noteData:Int, ?prevNote:Note, ?sustainNote:Bool = false)
 	{
@@ -51,20 +77,6 @@ class Note extends FlxSprite
 		this.strumTime = strumTime;
 
 		this.noteData = noteData;
-
-		var rand = new FlxRandom();
-		if (isSustainNote) {
-			this.autoHP = 0;
-		}
-		else {
-			this.autoHP = Std.int(rand.floatNormal(3.5, 1));
-			this.autoHP = this.autoHP < 0 ? 0 : this.autoHP;
-			this.autoHP = this.autoHP > 6 ? 6 : this.autoHP;
-			// hacky shit
-			if (!prevNote.isSustainNote) 
-				this.autoHP = Std.int(cast(this.autoHP, Float) / 2.0 + cast(prevNote.autoHP, Float) / 2.0);
-		}
-		//this.autoHP = isSustainNote ? 0 : rand.int(0, 3) + rand.int(0, 3); //prioritize perfect notes
 
 		var daStage:String = PlayState.curStage;
 

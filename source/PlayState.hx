@@ -125,13 +125,13 @@ class PlayState extends MusicBeatState
 	var inCutscene:Bool = false;
 
 	//autoplay thing
-	var autoplay:Bool = true;
-	var perfectAuto:Bool = false;
-	var hold:Array<Int> = [0, 0, 0, 0];
-	var strumChecked:Array<Bool> = [false, false, false, false];
-	var canRelease:Array<Bool> = [true, true, true, true];
-	var strumRelease:Array<Bool> = [false, false, false, false];
-	var rand = new FlxRandom();
+	public static var autoplay:Bool = true;
+	public static var perfectAuto:Bool = false;
+	private var hold:Array<Int> = [0, 0, 0, 0];
+	private var strumChecked:Array<Bool> = [false, false, false, false];
+	private var canRelease:Array<Bool> = [true, true, true, true];
+	private var strumRelease:Array<Bool> = [false, false, false, false];
+	private var rand = new FlxRandom();
 
 	override public function create()
 	{
@@ -1325,19 +1325,13 @@ class PlayState extends MusicBeatState
 		if (FlxG.keys.justPressed.C)
 		{
 			autoplay = !autoplay;
-			if (autoplay)
-				trace("Autoplay enabled");
-			else if (!autoplay)
-				trace("Autoplay disabled");
+			trace("Autoplay " + (PlayState.autoplay ? "enabled" : "disabled"));
 		}
 	
 		if (FlxG.keys.justPressed.P)
 		{
 			perfectAuto = !perfectAuto;
-			if (perfectAuto)
-				trace("Perfect autoplay enabled");
-			else if (!perfectAuto)
-				trace("Perfect autoplay disabled");
+			trace("Perfect autoplay " + (PlayState.perfectAuto ? "enabled" : "disabled"));
 		}
 
 		// FlxG.watch.addQuick('VOL', vocals.amplitudeLeft);
@@ -1910,10 +1904,11 @@ class PlayState extends MusicBeatState
 				// found a note that can be hit
 				if (daNote.canBeHit && daNote.mustPress && !daNote.tooLate) {
 					// there is a HP counter to randomize press time
+					// init it first if it has not been initialized
+					if (!daNote.initHP) daNote.initDelay(perfectAuto);
 					// subtract HP regardless of holding or not to ensure notes dont get ignored
 					if (daNote.autoHP > 0) {
-						// in perfect mode, speed up hp drain
-						daNote.autoHP -= perfectMode ? 4 : 1;
+						daNote.autoHP -= 1;
 					}
 					// else, found a note that can be hit
 					// strumChecked makes autoplay only respond to one note per channel
