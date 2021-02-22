@@ -1587,27 +1587,18 @@ class PlayState extends MusicBeatState
 
 				if (daNote.y < -daNote.height)
 				{
-					if (daNote.isSustainNote && daNote.wasGoodHit)
+					if (daNote.tooLate || !daNote.wasGoodHit)
 					{
-						daNote.kill();
-						notes.remove(daNote, true);
-						daNote.destroy();
+						health -= 0.0475;
+						vocals.volume = 0;
 					}
-					else
-					{
-						if (daNote.tooLate || !daNote.wasGoodHit)
-						{
-							health -= 0.0475;
-							vocals.volume = 0;
-						}
 
-						daNote.active = false;
-						daNote.visible = false;
+					daNote.active = false;
+					daNote.visible = false;
 
-						daNote.kill();
-						notes.remove(daNote, true);
-						daNote.destroy();
-					}
+					daNote.kill();
+					notes.remove(daNote, true);
+					daNote.destroy();
 				}
 			});
 		}
@@ -1892,7 +1883,7 @@ class PlayState extends MusicBeatState
 
 			notes.forEachAlive(function(daNote:Note)
 			{
-				if (daNote.canBeHit && daNote.mustPress && !daNote.tooLate)
+				if (daNote.canBeHit && daNote.mustPress && !daNote.tooLate && !daNote.wasGoodHit)
 				{
 					// the sorting probably doesn't need to be in here? who cares lol
 					possibleNotes.push(daNote);
@@ -1968,13 +1959,15 @@ class PlayState extends MusicBeatState
 							if (upP || rightP || downP || leftP)
 								noteCheck(leftP, daNote);
 					}
-				 */
+				
+				//this is already done in noteCheck / goodNoteHit
 				if (daNote.wasGoodHit)
 				{
 					daNote.kill();
 					notes.remove(daNote, true);
 					daNote.destroy();
 				}
+				 */
 			}
 			else
 			{
