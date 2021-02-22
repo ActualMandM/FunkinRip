@@ -2194,7 +2194,9 @@ class PlayState extends MusicBeatState
 	function trainStart():Void
 	{
 		trainMoving = true;
-		if (!trainSound.playing)
+		// commented out to fix train sound sometimes not playing
+		// thanks brubsby
+		// if (!trainSound.playing)
 			trainSound.play(true);
 	}
 
@@ -2296,7 +2298,8 @@ class PlayState extends MusicBeatState
 			// if (SONG.notes[Math.floor(curStep / 16)].mustHitSection)
 
 			// brubsby change, dad now dances whenever no singing
-			if (!dad.animation.curAnim.name.startsWith('sing')) 
+			// also now dances on beat
+			if (!dad.animation.curAnim.name.startsWith('sing') && curBeat % 2 == 0) 
 				dad.dance();
 		}
 		// FlxG.log.add('change bpm' + SONG.notes[Std.int(curStep / 16)].changeBPM);
