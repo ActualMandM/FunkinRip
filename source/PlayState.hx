@@ -2299,7 +2299,10 @@ class PlayState extends MusicBeatState
 
 			// brubsby change, dad now dances whenever no singing
 			// also now dances on beat
+			// unless the dad's name starts with 'skid' and ends with 'pump'
 			if (!dad.animation.curAnim.name.startsWith('sing') && curBeat % 2 == 0) 
+				dad.dance();
+			else if (!dad.animation.curAnim.name.startsWith('sing') && dad.curCharacter == 'spooky') 
 				dad.dance();
 		}
 		// FlxG.log.add('change bpm' + SONG.notes[Std.int(curStep / 16)].changeBPM);
