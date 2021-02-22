@@ -1325,11 +1325,19 @@ class PlayState extends MusicBeatState
 		if (FlxG.keys.justPressed.C)
 		{
 			autoplay = !autoplay;
+			if (autoplay)
+				trace("Autoplay enabled");
+			else if (!autoplay)
+				trace("Autoplay disabled");
 		}
 	
 		if (FlxG.keys.justPressed.P)
 		{
 			perfectAuto = !perfectAuto;
+			if (perfectAuto)
+				trace("Perfect autoplay enabled");
+			else if (!perfectAuto)
+				trace("Perfect autoplay disabled");
 		}
 
 		// FlxG.watch.addQuick('VOL', vocals.amplitudeLeft);
