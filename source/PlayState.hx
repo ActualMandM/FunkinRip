@@ -2002,7 +2002,7 @@ class PlayState extends MusicBeatState
 			});
 		}
 
-		if (boyfriend.holdTimer > Conductor.stepCrochet * 4 * 0.001 && !up && !down && !right && !left && curBeat % 2 -- 0)
+		if (boyfriend.holdTimer > Conductor.stepCrochet * 4 * 0.001 && !up && !down && !right && !left && curBeat % 2 == 0)
 		{
 			if (boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss'))
 				boyfriend.playAnim('idle');
@@ -2295,7 +2295,7 @@ class PlayState extends MusicBeatState
 			// Dad doesnt interupt his own notes
 			// if (SONG.notes[Math.floor(curStep / 16)].mustHitSection)
 
-			if (curBeat % 2 -- 0)
+			if (curBeat % 2 == 0)
 			{
 				if (!dad.animation.curAnim.name.startsWith('sing')) 
 					dad.dance();
