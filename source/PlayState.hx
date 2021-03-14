@@ -2002,13 +2002,10 @@ class PlayState extends MusicBeatState
 			});
 		}
 
-		if (boyfriend.holdTimer > Conductor.stepCrochet * 4 * 0.001 && !up && !down && !right && !left)
+		if (boyfriend.holdTimer > Conductor.stepCrochet * 4 * 0.001 && !up && !down && !right && !left && curBeat % 2 -- 0)
 		{
-			// if (boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss'))
-			if (boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss') && curBeat % 1 == 0)
-			{
+			if (boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss'))
 				boyfriend.playAnim('idle');
-			}
 		}
 
 		playerStrums.forEach(function(spr:FlxSprite)
@@ -2298,9 +2295,14 @@ class PlayState extends MusicBeatState
 			// Dad doesnt interupt his own notes
 			// if (SONG.notes[Math.floor(curStep / 16)].mustHitSection)
 
-			// brubsby change, dad now dances whenever no singing
-			// also now dances on beat
-			if (!dad.animation.curAnim.name.startsWith('sing') && curBeat % 1 == 0) 
+			if (curBeat % 2 -- 0)
+			{
+				if (!dad.animation.curAnim.name.startsWith('sing')) 
+					dad.dance();
+				if (!boyfriend.animation.curAnim.name.startsWith('sing')) 
+					boyfriend.dance();
+			}
+			else if (dad.curCharacter == 'spooky')
 				dad.dance();
 		}
 		// FlxG.log.add('change bpm' + SONG.notes[Std.int(curStep / 16)].changeBPM);
@@ -2330,14 +2332,11 @@ class PlayState extends MusicBeatState
 			gf.dance();
 		}
 
-		// if (!boyfriend.animation.curAnim.name.startsWith("sing"))
-
-		// make boyfriend dance every beat too
-		if (!boyfriend.animation.curAnim.name.startsWith("sing") && curBeat % 1 == 0)
-		{
-			// boyfriend.playAnim('idle');
-			boyfriend.dance();
-		}
+		//if (!boyfriend.animation.curAnim.name.startsWith("sing"))
+		//{
+		//	// boyfriend.playAnim('idle');
+		//	boyfriend.dance();
+		//}
 
 		if (curBeat % 8 == 7 && curSong == 'Bopeebo')
 		{
