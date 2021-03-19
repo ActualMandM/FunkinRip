@@ -448,7 +448,7 @@ class PlayState extends MusicBeatState
 			bg.scale.set(6, 6);
 			add(bg);
 
-			/* 
+			/*
 				var bg:FlxSprite = new FlxSprite(posX, posY).loadGraphic('assets/images/weeb/evilSchoolBG.png');
 				bg.scale.set(6, 6);
 				// bg.setGraphicSize(Std.int(bg.width * 6));
@@ -470,7 +470,7 @@ class PlayState extends MusicBeatState
 			// bg.shader = wiggleShit.shader;
 			// fg.shader = wiggleShit.shader;
 
-			/* 
+			/*
 				var waveSprite = new FlxEffectSprite(bg, [waveEffectBG]);
 				var waveSpriteFG = new FlxEffectSprite(fg, [waveEffectFG]);
 
@@ -888,9 +888,19 @@ class PlayState extends MusicBeatState
 
 		startTimer = new FlxTimer().start(Conductor.crochet / 1000, function(tmr:FlxTimer)
 		{
-			dad.dance();
-			gf.dance();
-			boyfriend.playAnim('idle');
+			// this just based on beatHit stuff but compact
+			if (swagCounter % gfSpeed == 0 && swagCounter < 4)
+				gf.dance();
+			if (swagCounter % 2 == 0)
+			{
+				if (!boyfriend.animation.curAnim.name.startsWith("sing"))
+					boyfriend.playAnim('idle', true);
+				if (!dad.animation.curAnim.name.startsWith("sing"))
+					dad.playAnim('idle', true);
+
+			}
+			else if (dad.curCharacter == 'spooky' && !dad.animation.curAnim.name.startsWith("sing"))
+				dad.dance();
 
 			var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
 			introAssets.set('default', ['ready.png', "set.png", "go.png"]);
@@ -1849,7 +1859,7 @@ class PlayState extends MusicBeatState
 
 			daLoop++;
 		}
-		/* 
+		/*
 			trace(combo);
 			trace(seperatedScore);
 		 */
@@ -2076,12 +2086,12 @@ class PlayState extends MusicBeatState
 				{
 					noteCheck(controlArray[daNote.noteData], daNote);
 				}
-				/* 
+				/*
 					if (controlArray[daNote.noteData])
 						goodNoteHit(daNote);
 				 */
 				// trace(daNote.noteData);
-				/* 
+				/*
 					switch (daNote.noteData)
 					{
 						case 2: // NOTES YOU JUST PRESSED
@@ -2097,7 +2107,7 @@ class PlayState extends MusicBeatState
 							if (upP || rightP || downP || leftP)
 								noteCheck(leftP, daNote);
 					}
-				
+
 				//this is already done in noteCheck / goodNoteHit
 				if (daNote.wasGoodHit)
 				{
@@ -2140,13 +2150,10 @@ class PlayState extends MusicBeatState
 			});
 		}
 
-		if (boyfriend.holdTimer > Conductor.stepCrochet * 4 * 0.001 && !up && !down && !right && !left)
+		if (boyfriend.holdTimer > Conductor.stepCrochet * 4 * 0.001 && !up && !down && !right && !left && curBeat % 2 == 0)
 		{
-			// if (boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss'))
-			if (boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss') && curBeat % 1 == 0)
-			{
+			if (boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss'))
 				boyfriend.playAnim('idle');
-			}
 		}
 
 		playerStrums.forEach(function(spr:FlxSprite)
@@ -2436,9 +2443,14 @@ class PlayState extends MusicBeatState
 			// Dad doesnt interupt his own notes
 			// if (SONG.notes[Math.floor(curStep / 16)].mustHitSection)
 
-			// brubsby change, dad now dances whenever no singing
-			// also now dances on beat
-			if (!dad.animation.curAnim.name.startsWith('sing') && curBeat % 1 == 0) 
+			if (curBeat % 2 == 0)
+			{
+				if (!dad.animation.curAnim.name.startsWith('sing'))
+					dad.dance();
+				if (!boyfriend.animation.curAnim.name.startsWith('sing'))
+					boyfriend.dance();
+			}
+			else if (dad.curCharacter == 'spooky')
 				dad.dance();
 		}
 		// FlxG.log.add('change bpm' + SONG.notes[Std.int(curStep / 16)].changeBPM);
@@ -2468,14 +2480,11 @@ class PlayState extends MusicBeatState
 			gf.dance();
 		}
 
-		// if (!boyfriend.animation.curAnim.name.startsWith("sing"))
-
-		// make boyfriend dance every beat too
-		if (!boyfriend.animation.curAnim.name.startsWith("sing") && curBeat % 1 == 0)
-		{
-			// boyfriend.playAnim('idle');
-			boyfriend.dance();
-		}
+		//if (!boyfriend.animation.curAnim.name.startsWith("sing"))
+		//{
+		//	// boyfriend.playAnim('idle');
+		//	boyfriend.dance();
+		//}
 
 		if (curBeat % 8 == 7 && curSong == 'Bopeebo')
 		{
