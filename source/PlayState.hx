@@ -438,7 +438,7 @@ class PlayState extends MusicBeatState
 			bg.scale.set(6, 6);
 			add(bg);
 
-			/* 
+			/*
 				var bg:FlxSprite = new FlxSprite(posX, posY).loadGraphic('assets/images/weeb/evilSchoolBG.png');
 				bg.scale.set(6, 6);
 				// bg.setGraphicSize(Std.int(bg.width * 6));
@@ -460,7 +460,7 @@ class PlayState extends MusicBeatState
 			// bg.shader = wiggleShit.shader;
 			// fg.shader = wiggleShit.shader;
 
-			/* 
+			/*
 				var waveSprite = new FlxEffectSprite(bg, [waveEffectBG]);
 				var waveSpriteFG = new FlxEffectSprite(fg, [waveEffectFG]);
 
@@ -878,9 +878,19 @@ class PlayState extends MusicBeatState
 
 		startTimer = new FlxTimer().start(Conductor.crochet / 1000, function(tmr:FlxTimer)
 		{
-			dad.dance();
-			gf.dance();
-			boyfriend.playAnim('idle');
+			// this just based on beatHit stuff but compact
+			if (swagCounter % gfSpeed == 0 && swagCounter < 4)
+				gf.dance();
+			if (swagCounter % 2 == 0)
+			{
+				if (!boyfriend.animation.curAnim.name.startsWith("sing"))
+					boyfriend.playAnim('idle', true);
+				if (!dad.animation.curAnim.name.startsWith("sing"))
+					dad.playAnim('idle', true);
+
+			}
+			else if (dad.curCharacter == 'spooky' && !dad.animation.curAnim.name.startsWith("sing"))
+				dad.dance();
 
 			var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
 			introAssets.set('default', ['ready.png', "set.png", "go.png"]);
@@ -1825,7 +1835,7 @@ class PlayState extends MusicBeatState
 
 			daLoop++;
 		}
-		/* 
+		/*
 			trace(combo);
 			trace(seperatedScore);
 		 */
@@ -1938,12 +1948,12 @@ class PlayState extends MusicBeatState
 				{
 					noteCheck(controlArray[daNote.noteData], daNote);
 				}
-				/* 
+				/*
 					if (controlArray[daNote.noteData])
 						goodNoteHit(daNote);
 				 */
 				// trace(daNote.noteData);
-				/* 
+				/*
 					switch (daNote.noteData)
 					{
 						case 2: // NOTES YOU JUST PRESSED
@@ -1959,7 +1969,7 @@ class PlayState extends MusicBeatState
 							if (upP || rightP || downP || leftP)
 								noteCheck(leftP, daNote);
 					}
-				
+
 				//this is already done in noteCheck / goodNoteHit
 				if (daNote.wasGoodHit)
 				{
@@ -2297,9 +2307,9 @@ class PlayState extends MusicBeatState
 
 			if (curBeat % 2 == 0)
 			{
-				if (!dad.animation.curAnim.name.startsWith('sing')) 
+				if (!dad.animation.curAnim.name.startsWith('sing'))
 					dad.dance();
-				if (!boyfriend.animation.curAnim.name.startsWith('sing')) 
+				if (!boyfriend.animation.curAnim.name.startsWith('sing'))
 					boyfriend.dance();
 			}
 			else if (dad.curCharacter == 'spooky')
