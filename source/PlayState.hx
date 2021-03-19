@@ -130,7 +130,7 @@ class PlayState extends MusicBeatState
 	private var hold:Array<Int> = [0, 0, 0, 0];
 	private var strumChecked:Array<Bool> = [false, false, false, false];
 	private var canRelease:Array<Bool> = [true, true, true, true];
-	private var strumRelease:Array<Bool> = [false, false, false, false];
+	private var strumRelease:Array<Array<Bool>> = [[false, false], [false, false], [false, false], [false, false]];
 	private var rand = new FlxRandom();
 
 	override public function create()
@@ -1902,7 +1902,7 @@ class PlayState extends MusicBeatState
 			notes.forEachAlive(function(daNote:Note) 
 			{
 				// found a note that can be hit
-				if (daNote.canBeHit && daNote.mustPress && !daNote.tooLate) {
+				if (daNote.canBeHit && daNote.mustPress && !daNote.tooLate && !daNote.autoHandled) {
 					// there is a HP counter to randomize press time
 					// init it first if it has not been initialized
 					if (!daNote.initHP) daNote.initDelay(perfectAuto);
@@ -1915,28 +1915,35 @@ class PlayState extends MusicBeatState
 					// TODO sort?
 					else if (!strumChecked[daNote.noteData]) {
 						strumChecked[daNote.noteData] = true;
-						strumRelease[daNote.noteData] = false;
+						strumRelease[daNote.noteData][0] = true;
+						strumRelease[daNote.noteData][1] = false;
 						// if currently holding
 						if (hold[daNote.noteData] > 1) {
 							// if holding normal note or last sustain note (canRelease)
 							// release in order to press next frame
-							if (canRelease[daNote.noteData])
+							if (canRelease[daNote.noteData] && !daNote.isSustainNote)
 								hold[daNote.noteData] = -1;
 							// else, holding sustain notes, keep holding
+							else if (daNote.isSustainNote)
+								daNote.autoHandled = true;
 						}
 						else if (hold[daNote.noteData] == 0) { //prevent a previous note in notes setting to -1
 							hold[daNote.noteData] = 1;
+							daNote.autoHandled = true;
 						}
 					}
 					// check if need to keep "pressing" this key for the next note
-					strumRelease[daNote.noteData] = strumRelease[daNote.noteData] || daNote.canRelease;
+					// strumRelease[0] = false if a middle sustain note exists
+					strumRelease[daNote.noteData][0] = strumRelease[daNote.noteData][0] && daNote.canRelease;
+					// strumRelease[1] = true if a normal/ending sustain note exists
+					strumRelease[daNote.noteData][1] = strumRelease[daNote.noteData][1] || daNote.canRelease;
 				}
 			});
 			// do release checking
 			//playerStrums.forEach(function(spr:FlxSprite) {
 			//	var idx = spr.ID;
 			for(idx in 0...4) {
-				canRelease[idx] = strumRelease[idx];
+				canRelease[idx] = strumRelease[idx][1];
 				// if hold is 1, press
 				var debug_arrow = '';
 				switch (idx) {
@@ -1973,11 +1980,14 @@ class PlayState extends MusicBeatState
 					// increment hold value until it reaches a random threshold
 					// if the button cannot be released yet (sustain note), ignore
 					// in perfect mode release quickly
-					if (canRelease[idx]) {
+					if (strumRelease[idx][0]) {
 						hold[idx] += 1;
 						if (hold[idx] >= (perfectAuto ? rand.int(4, 7) : rand.int(10, 20))) {
 							hold[idx] = -1;
 						}
+					}
+					else {
+						hold[idx] = (perfectAuto ? 3 : 7);
 					}
 				}
 				// if hold is -1, release

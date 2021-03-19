@@ -35,6 +35,7 @@ class Note extends FlxSprite
 	public var initHP:Bool = false;
 	public var autoHP:Int = 1;
 	public var canRelease:Bool = true;
+	public var autoHandled:Bool = false;
 	public static var delayMin:Int = 0;
 	public static var delayMax:Int = 7;
 	public static var delayStd:Float = 1.0;
