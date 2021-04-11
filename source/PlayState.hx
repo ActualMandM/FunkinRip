@@ -22,6 +22,7 @@ import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
+import flixel.math.FlxRandom;
 import flixel.math.FlxRect;
 import flixel.system.FlxSound;
 import flixel.text.FlxText;
@@ -122,6 +123,15 @@ class PlayState extends MusicBeatState
 	public static var daPixelZoom:Float = 6;
 
 	var inCutscene:Bool = false;
+
+	//autoplay thing
+	public static var autoplay:Bool = false;
+	public static var perfectAuto:Bool = false;
+	private var hold:Array<Int> = [0, 0, 0, 0];
+	private var strumChecked:Array<Bool> = [false, false, false, false];
+	private var canRelease:Array<Bool> = [true, true, true, true];
+	private var strumRelease:Array<Array<Bool>> = [[false, false], [false, false], [false, false], [false, false]];
+	private var rand = new FlxRandom();
 
 	override public function create()
 	{
@@ -1064,6 +1074,8 @@ class PlayState extends MusicBeatState
 				for (susNote in 0...Math.floor(susLength))
 				{
 					oldNote = unspawnNotes[Std.int(unspawnNotes.length - 1)];
+					//for autoplay: the oldNote is a sustain note, set canRelease to false so dont release early
+					oldNote.canRelease = false;
 
 					var sustainNote:Note = new Note(daStrumTime + (Conductor.stepCrochet * susNote) + Conductor.stepCrochet, daNoteData, oldNote, true);
 					sustainNote.scrollFactor.set();
@@ -1318,6 +1330,18 @@ class PlayState extends MusicBeatState
 		if (FlxG.keys.justPressed.SEVEN)
 		{
 			FlxG.switchState(new ChartingState());
+		}
+
+		if (FlxG.keys.justPressed.C)
+		{
+			autoplay = !autoplay;
+			trace("Autoplay " + (PlayState.autoplay ? "enabled" : "disabled"));
+		}
+	
+		if (FlxG.keys.justPressed.P)
+		{
+			perfectAuto = !perfectAuto;
+			trace("Perfect autoplay " + (PlayState.perfectAuto ? "enabled" : "disabled"));
 		}
 
 		// FlxG.watch.addQuick('VOL', vocals.amplitudeLeft);
@@ -1878,6 +1902,120 @@ class PlayState extends MusicBeatState
 		var rightR = controls.RIGHT_R;
 		var downR = controls.DOWN_R;
 		var leftR = controls.LEFT_R;
+
+		//====== EPIC AUTOPLAY ======//
+		if (autoplay) {
+			// yeet the player input
+			up = right = down = left = false;
+			upP = rightP = downP = leftP = false;
+			upR = rightR = downR = leftR = false;
+			notes.forEachAlive(function(daNote:Note) 
+			{
+				// found a note that can be hit
+				if (daNote.canBeHit && daNote.mustPress && !daNote.tooLate && !daNote.autoHandled) {
+					// there is a HP counter to randomize press time
+					// init it first if it has not been initialized
+					if (!daNote.initHP) daNote.initDelay(perfectAuto);
+					// subtract HP regardless of holding or not to ensure notes dont get ignored
+					if (daNote.autoHP > 0) {
+						daNote.autoHP -= 1;
+					}
+					// else, found a note that can be hit
+					// strumChecked makes autoplay only respond to one note per channel
+					// TODO sort?
+					else if (!strumChecked[daNote.noteData]) {
+						strumChecked[daNote.noteData] = true;
+						strumRelease[daNote.noteData][0] = true;
+						strumRelease[daNote.noteData][1] = false;
+						// if currently holding
+						if (hold[daNote.noteData] > 1) {
+							// if holding normal note or last sustain note (canRelease)
+							// release in order to press next frame
+							if (canRelease[daNote.noteData] && !daNote.isSustainNote)
+								hold[daNote.noteData] = -1;
+							// else, holding sustain notes, keep holding
+							else if (daNote.isSustainNote)
+								daNote.autoHandled = true;
+						}
+						else if (hold[daNote.noteData] == 0) { //prevent a previous note in notes setting to -1
+							hold[daNote.noteData] = 1;
+							daNote.autoHandled = true;
+						}
+					}
+					// check if need to keep "pressing" this key for the next note
+					// strumRelease[0] = false if a middle sustain note exists
+					strumRelease[daNote.noteData][0] = strumRelease[daNote.noteData][0] && daNote.canRelease;
+					// strumRelease[1] = true if a normal/ending sustain note exists
+					strumRelease[daNote.noteData][1] = strumRelease[daNote.noteData][1] || daNote.canRelease;
+				}
+			});
+			// do release checking
+			//playerStrums.forEach(function(spr:FlxSprite) {
+			//	var idx = spr.ID;
+			for(idx in 0...4) {
+				canRelease[idx] = strumRelease[idx][1];
+				// if hold is 1, press
+				var debug_arrow = '';
+				switch (idx) {
+					case 2: debug_arrow = 'up';
+					case 3: debug_arrow = 'right';
+					case 1: debug_arrow = 'down';
+					case 0: debug_arrow = 'left';
+				}
+				//FlxG.watch.addQuick("hold " + debug_arrow, hold[idx]);
+				//FlxG.watch.addQuick("rel " + debug_arrow, canRelease[idx]);
+
+				if (hold[idx] == 1) {
+					switch (idx) {
+						case 2: upP = true;
+						case 3: rightP = true;
+						case 1: downP = true;
+						case 0: leftP = true;
+					}
+					//FlxG.log.add('PRESS ' + debug_arrow);
+					hold[idx] = 2;
+				}
+				// if hold is > 1, hold
+				if (hold[idx] > 1) {
+					switch (idx) {
+						case 2: up = true;
+						case 3: right = true;
+						case 1: down = true;
+						case 0: left = true;
+					}
+					//FlxG.log.add('HOLD ' + debug_arrow + ' ' + hold[idx]);
+				}
+				// adding a second check if hold is somehow < 1 but the animation is still active (removed)
+				if (hold[idx] > 1/* || spr.animation.curAnim.name == 'confirm'*/) {
+					// increment hold value until it reaches a random threshold
+					// if the button cannot be released yet (sustain note), ignore
+					// in perfect mode release quickly
+					if (strumRelease[idx][0]) {
+						hold[idx] += 1;
+						if (hold[idx] >= (perfectAuto ? rand.int(4, 7) : rand.int(10, 20))) {
+							hold[idx] = -1;
+						}
+					}
+					else {
+						hold[idx] = (perfectAuto ? 3 : 7);
+					}
+				}
+				// if hold is -1, release
+				if (hold[idx] == -1) {
+					switch (idx) {
+						case 2: upR = true;
+						case 3: rightR = true;
+						case 1: downR = true;
+						case 0: leftR = true;
+					}
+					//FlxG.log.add('RELEASE ' + debug_arrow);
+					hold[idx] = 0;
+				}
+				// reset strumcheck for next frame
+				strumChecked[idx] = false;
+			}//);
+		}
+		//====== EPIC AUTOPLAY ======//
 
 		var controlArray:Array<Bool> = [leftP, downP, upP, rightP];
 
