@@ -127,6 +127,10 @@ class ChartingState extends MusicBeatState
 			};
 		}
 
+		// make stage use the one thats present in PlayState
+		if (_song.stage == null)
+			_song.stage = PlayState.curStage;
+
 		FlxG.mouse.visible = true;
 		// FlxG.save.bind('funkin', 'ninjamuffin99');
 		FlxG.save.bind('funkinrip', 'ninjamuffin99');
