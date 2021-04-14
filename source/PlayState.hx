@@ -893,10 +893,9 @@ class PlayState extends MusicBeatState
 			if (swagCounter % 2 == 0)
 			{
 				if (!boyfriend.animation.curAnim.name.startsWith("sing"))
-					boyfriend.playAnim('idle', true);
+					boyfriend.dance();
 				if (!dad.animation.curAnim.name.startsWith("sing"))
-					dad.playAnim('idle', true);
-
+					dad.dance();
 			}
 			else if (dad.curCharacter == 'spooky' && !dad.animation.curAnim.name.startsWith("sing"))
 				dad.dance();
@@ -2449,6 +2448,8 @@ class PlayState extends MusicBeatState
 				if (!boyfriend.animation.curAnim.name.startsWith('sing'))
 					boyfriend.dance();
 			}
+			else if (dad.curCharacter == 'gf' && curBeat % 1 == 0)
+				dad.dance();
 			else if (dad.curCharacter == 'spooky')
 				dad.dance();
 		}
