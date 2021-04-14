@@ -243,7 +243,9 @@ class ChartingState extends MusicBeatState
 
 		player2DropDown.selectedLabel = _song.player2;
 
-		var stages:Array<String> = CoolUtil.coolTextFile('assets/data/stageList.txt');
+		// var stages:Array<String> = CoolUtil.coolTextFile('assets/data/stageList.txt');
+		// hardcode selection so that we don't have to package new builds
+		var stages:Array<String> = ['stage', 'spooky', 'philly', 'limo', 'mall', 'mallEvil', 'school', 'schoolEvil'];
 
 		var stageDropDown = new FlxUIDropDownMenu(10, 130, FlxUIDropDownMenu.makeStrIdLabelArray(stages, true), function(stage:String)
 		{
