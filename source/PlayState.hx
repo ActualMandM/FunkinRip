@@ -206,7 +206,7 @@ class PlayState extends MusicBeatState
 					curStage = "stage";
 			}
 		}
-		else if (SONG.stage != null)
+		else
 			curStage = SONG.stage;
 
 		switch (curStage)
