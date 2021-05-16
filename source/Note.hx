@@ -36,8 +36,8 @@ class Note extends FlxSprite
 	public var autoHP:Int = 1;
 	public var canRelease:Bool = true;
 	public var autoHandled:Bool = false;
-	public static var delayMin:Int = 0;
-	public static var delayMax:Int = 7;
+	public static var delayMin:Int = 2;
+	public static var delayMax:Int = 8;
 	public static var delayStd:Float = 1.0;
 	public function initDelay(perfect:Bool) {
 		// if initHP is false, call this function
@@ -46,7 +46,7 @@ class Note extends FlxSprite
 			this.autoHP = 0;
 		}
 		else if (perfect) {
-			this.autoHP = 2;
+			this.autoHP = delayMin;
 		}
 		else {
 			var delayMean = cast(delayMin + delayMax, Float) / 2.0;

@@ -124,13 +124,19 @@ class PlayState extends MusicBeatState
 
 	var inCutscene:Bool = false;
 
-	//autoplay thing
+	// autoplay thing
 	public static var autoplay:Bool = false;
 	public static var perfectAuto:Bool = false;
+	public static var antiInfiHoldThres:Int = 10;
+	public static var holdDelayMin:Int = 8;
+	public static var holdDelayMax:Int = 16;
+	public static var holdPerfDelayMin:Int = 3;
+	public static var holdPerfDelayMax:Int = 6;
+
 	private var hold:Array<Int> = [0, 0, 0, 0];
 	private var strumChecked:Array<Bool> = [false, false, false, false];
 	private var canRelease:Array<Bool> = [true, true, true, true];
-	private var strumRelease:Array<Array<Bool>> = [[false, false], [false, false], [false, false], [false, false]];
+	private var strumHoldCounter:Array<Int> = [0, 0, 0, 0];
 	private var rand = new FlxRandom();
 
 	override public function create()
@@ -333,7 +339,7 @@ class PlayState extends MusicBeatState
 				limo.antialiasing = true;
 
 				fastCar = new FlxSprite(-300, 160).loadGraphic('assets/images/limo/fastCarLol.png');
-				// add(limo);
+			// add(limo);
 
 			case 'mall':
 				defaultCamZoom = 0.80;
@@ -500,7 +506,7 @@ class PlayState extends MusicBeatState
 					wiggleShit.waveAmplitude = 0.01;
 					wiggleShit.waveFrequency = 60;
 					wiggleShit.waveSpeed = 0.8;
-				*/
+				 */
 
 				// bg.shader = wiggleShit.shader;
 				// fg.shader = wiggleShit.shader;
@@ -525,7 +531,7 @@ class PlayState extends MusicBeatState
 
 					add(waveSprite);
 					add(waveSpriteFG);
-				*/
+				 */
 		}
 
 		var gfVersion:String = 'gf';
@@ -1067,7 +1073,7 @@ class PlayState extends MusicBeatState
 				for (susNote in 0...Math.floor(susLength))
 				{
 					oldNote = unspawnNotes[Std.int(unspawnNotes.length - 1)];
-					//for autoplay: the oldNote is a sustain note, set canRelease to false so dont release early
+					// for autoplay: the oldNote is a sustain note, set canRelease to false so dont release early
 					oldNote.canRelease = false;
 
 					var sustainNote:Note = new Note(daStrumTime + (Conductor.stepCrochet * susNote) + Conductor.stepCrochet, daNoteData, oldNote, true);
@@ -1330,7 +1336,7 @@ class PlayState extends MusicBeatState
 			autoplay = !autoplay;
 			trace("Autoplay " + (PlayState.autoplay ? "enabled" : "disabled"));
 		}
-	
+
 		if (FlxG.keys.justPressed.P)
 		{
 			perfectAuto = !perfectAuto;
@@ -1880,300 +1886,233 @@ class PlayState extends MusicBeatState
 
 	private function keyShit():Void
 	{
-		// HOLDING
-		var up = controls.UP;
-		var right = controls.RIGHT;
-		var down = controls.DOWN;
-		var left = controls.LEFT;
+		// control arrays, order L D U R
+		var holdArray:Array<Bool> = [controls.LEFT, controls.DOWN, controls.UP, controls.RIGHT];
+		var pressArray:Array<Bool> = [controls.LEFT_P, controls.DOWN_P, controls.UP_P, controls.RIGHT_P];
+		var releaseArray:Array<Bool> = [controls.LEFT_R, controls.DOWN_R, controls.UP_R, controls.RIGHT_R];
 
-		var upP = controls.UP_P;
-		var rightP = controls.RIGHT_P;
-		var downP = controls.DOWN_P;
-		var leftP = controls.LEFT_P;
-
-		var upR = controls.UP_R;
-		var rightR = controls.RIGHT_R;
-		var downR = controls.DOWN_R;
-		var leftR = controls.LEFT_R;
-
-		//====== EPIC AUTOPLAY ======//
-		if (autoplay) {
+		// =========== AUTOPLAY BELOW ============//
+		if (autoplay)
+		{
 			// yeet the player input
-			up = right = down = left = false;
-			upP = rightP = downP = leftP = false;
-			upR = rightR = downR = leftR = false;
-			notes.forEachAlive(function(daNote:Note) 
+			holdArray = [false, false, false, false];
+			pressArray = [false, false, false, false];
+			releaseArray = [false, false, false, false];
+
+			/**
+				Find notes that can be hit, and sort them by time
+				TODO: combine this with the one below so it doesnt do this twice?
+			**/
+			var possibleAutoNotes:Array<Note> = [];
+
+			notes.forEachAlive(function(note:Note)
 			{
-				// found a note that can be hit
-				if (daNote.canBeHit && daNote.mustPress && !daNote.tooLate && !daNote.autoHandled) {
-					// there is a HP counter to randomize press time
-					// init it first if it has not been initialized
-					if (!daNote.initHP) daNote.initDelay(perfectAuto);
+				if (note.canBeHit && note.mustPress && !note.tooLate && !note.wasGoodHit)
+				{
+					// there is a HP counter to randomize press time, init it first if it has not been initialized
+					if (!note.initHP)
+						note.initDelay(perfectAuto);
 					// subtract HP regardless of holding or not to ensure notes dont get ignored
-					if (daNote.autoHP > 0) {
-						daNote.autoHP -= 1;
-					}
-					// else, found a note that can be hit
-					// strumChecked makes autoplay only respond to one note per channel
-					// TODO sort?
-					else if (!strumChecked[daNote.noteData]) {
-						strumChecked[daNote.noteData] = true;
-						strumRelease[daNote.noteData][0] = true;
-						strumRelease[daNote.noteData][1] = false;
-						// if currently holding
-						if (hold[daNote.noteData] > 1) {
-							// if holding normal note or last sustain note (canRelease)
-							// release in order to press next frame
-							if (canRelease[daNote.noteData] && !daNote.isSustainNote)
-								hold[daNote.noteData] = -1;
-							// else, holding sustain notes, keep holding
-							else if (daNote.isSustainNote)
-								daNote.autoHandled = true;
-						}
-						else if (hold[daNote.noteData] == 0) { //prevent a previous note in notes setting to -1
-							hold[daNote.noteData] = 1;
-							daNote.autoHandled = true;
-						}
-					}
-					// check if need to keep "pressing" this key for the next note
-					// strumRelease[0] = false if a middle sustain note exists
-					strumRelease[daNote.noteData][0] = strumRelease[daNote.noteData][0] && daNote.canRelease;
-					// strumRelease[1] = true if a normal/ending sustain note exists
-					strumRelease[daNote.noteData][1] = strumRelease[daNote.noteData][1] || daNote.canRelease;
+					if (note.autoHP > 0)
+						note.autoHP -= 1;
+					// add the note to possibleNotes
+					possibleAutoNotes.push(note);
 				}
 			});
-			// do release checking
-			//playerStrums.forEach(function(spr:FlxSprite) {
-			//	var idx = spr.ID;
-			for(idx in 0...4) {
-				canRelease[idx] = strumRelease[idx][1];
-				// if hold is 1, press
-				var debug_arrow = '';
-				switch (idx) {
-					case 2: debug_arrow = 'up';
-					case 3: debug_arrow = 'right';
-					case 1: debug_arrow = 'down';
-					case 0: debug_arrow = 'left';
-				}
-				//FlxG.watch.addQuick("hold " + debug_arrow, hold[idx]);
-				//FlxG.watch.addQuick("rel " + debug_arrow, canRelease[idx]);
+			possibleAutoNotes.sort((a, b) -> Std.int(a.strumTime - b.strumTime));
 
-				if (hold[idx] == 1) {
-					switch (idx) {
-						case 2: upP = true;
-						case 3: rightP = true;
-						case 1: downP = true;
-						case 0: leftP = true;
+			/**
+				Update hold states for each arrow
+			**/
+			for (note in possibleAutoNotes)
+			{
+				strumHoldCounter[note.noteData] = 0;
+				// if note delay has passed
+				if (note.autoHP == 0)
+				{
+					// if this is the first note
+					if (!strumChecked[note.noteData])
+					{
+						// if currently holding
+						if (hold[note.noteData] > 1)
+						{
+							// if holding normal note or last sustain note (canRelease, which should be from the last frame)
+							// release in order to press next frame
+							if (canRelease[note.noteData] && !note.isSustainNote)
+								hold[note.noteData] = -1;
+							// else, holding sustain notes, keep holding
+						}
+						else if (hold[note.noteData] == 0)
+						{
+							// prevent a previous note in notes setting to -1
+							hold[note.noteData] = 1;
+						}
+						// update release state
+						canRelease[note.noteData] = note.canRelease;
 					}
-					//FlxG.log.add('PRESS ' + debug_arrow);
+					// else, additional notes that can be hit but come later
+					else
+					{
+					}
+					strumChecked[note.noteData] = true;
+				}
+			}
+
+			/**
+				Update key press variables based on hold values
+			**/
+			for (idx in 0...4)
+			{
+				var DEBUG_ARROW_TEXT:Array<String> = ['left', 'down', 'up', 'right'];
+				var debug_arrow = DEBUG_ARROW_TEXT[idx];
+
+				// FlxG.watch.addQuick("hold " + debug_arrow, hold[idx]);
+				// FlxG.watch.addQuick("rel " + debug_arrow, canRelease[idx]);
+
+				// PRESS if hold is 1
+				if (hold[idx] == 1)
+				{
+					pressArray[idx] = true;
+					// FlxG.log.add('PRESS ' + debug_arrow);
 					hold[idx] = 2;
 				}
-				// if hold is > 1, hold
-				if (hold[idx] > 1) {
-					switch (idx) {
-						case 2: up = true;
-						case 3: right = true;
-						case 1: down = true;
-						case 0: left = true;
-					}
-					//FlxG.log.add('HOLD ' + debug_arrow + ' ' + hold[idx]);
+
+				// HOLD if hold is > 1
+				if (hold[idx] > 1)
+				{
+					holdArray[idx] = true;
+					// FlxG.log.add('HOLD ' + debug_arrow + ' ' + hold[idx]);
 				}
-				// adding a second check if hold is somehow < 1 but the animation is still active (removed)
-				if (hold[idx] > 1/* || spr.animation.curAnim.name == 'confirm'*/) {
-					// increment hold value until it reaches a random threshold
-					// if the button cannot be released yet (sustain note), ignore
-					// in perfect mode release quickly
-					if (strumRelease[idx][0]) {
+
+				// if holding, increment value until it reaches random threshold
+				if (hold[idx] > 1)
+				{
+					// if the arrow cannot be released yet (sustain note), ignore
+					// if holding for too long and there is no new note to reset HoldCounter, release
+					// hoping its the right balance between not holding too long and not releasing in the middle of long hold
+					if (canRelease[idx] || strumHoldCounter[idx] > antiInfiHoldThres)
+					{
 						hold[idx] += 1;
-						if (hold[idx] >= (perfectAuto ? rand.int(4, 7) : rand.int(10, 20))) {
+						if (hold[idx] >= (perfectAuto ? rand.int(holdPerfDelayMin, holdPerfDelayMax) : rand.int(holdDelayMin, holdDelayMax)))
 							hold[idx] = -1;
-						}
 					}
-					else {
-						hold[idx] = (perfectAuto ? 3 : 7);
-					}
+					else
+						hold[idx] = 2;
+					// increment anti infi-hold counter
+					++strumHoldCounter[idx];
 				}
-				// if hold is -1, release
-				if (hold[idx] == -1) {
-					switch (idx) {
-						case 2: upR = true;
-						case 3: rightR = true;
-						case 1: downR = true;
-						case 0: leftR = true;
-					}
-					//FlxG.log.add('RELEASE ' + debug_arrow);
+
+				// RELEASE if hold is -1
+				if (hold[idx] == -1)
+				{
+					releaseArray[idx] = true;
+					// FlxG.log.add('RELEASE ' + debug_arrow);
 					hold[idx] = 0;
+					strumHoldCounter[idx] = 0;
 				}
-				// reset strumcheck for next frame
+
+				// reset for next frame
 				strumChecked[idx] = false;
-			}//);
+			}
 		}
-		//====== EPIC AUTOPLAY ======//
+		// =========== AUTOPLAY ABOVE ============//
 
-		var controlArray:Array<Bool> = [leftP, downP, upP, rightP];
+		// HOLDS, check for sustain notes
+		if (holdArray.contains(true) && /*!boyfriend.stunned && */ generatedMusic)
+		{
+			notes.forEachAlive(function(daNote:Note)
+			{
+				if (daNote.isSustainNote && daNote.canBeHit && daNote.mustPress && holdArray[daNote.noteData])
+					goodNoteHit(daNote);
+			});
+		}
 
-		// FlxG.watch.addQuick('asdfa', upP);
-		// if ((upP || rightP || downP || leftP) && !boyfriend.stunned && generatedMusic)
-		if ((upP || rightP || downP || leftP) && !inCutscene && !boyfriend.stunned && generatedMusic)
+		// PRESSES, check for note hits
+		if (pressArray.contains(true) && /*!boyfriend.stunned && */ generatedMusic)
 		{
 			boyfriend.holdTimer = 0;
 
-			var possibleNotes:Array<Note> = [];
-
-			var ignoreList:Array<Int> = [];
+			var possibleNotes:Array<Note> = []; // notes that can be hit
+			var directionList:Array<Int> = []; // directions that can be hit
+			var dumbNotes:Array<Note> = []; // notes to kill later
 
 			notes.forEachAlive(function(daNote:Note)
 			{
 				if (daNote.canBeHit && daNote.mustPress && !daNote.tooLate && !daNote.wasGoodHit)
 				{
-					// the sorting probably doesn't need to be in here? who cares lol
-					possibleNotes.push(daNote);
-					possibleNotes.sort((a, b) -> Std.int(a.strumTime - b.strumTime));
-
-					ignoreList.push(daNote.noteData);
-				}
-			});
-
-			if (possibleNotes.length > 0)
-			{
-				var daNote = possibleNotes[0];
-
-				if (perfectMode)
-					noteCheck(true, daNote);
-
-				// Jump notes
-				if (possibleNotes.length >= 2)
-				{
-					if (possibleNotes[0].strumTime == possibleNotes[1].strumTime)
+					if (directionList.contains(daNote.noteData))
 					{
 						for (coolNote in possibleNotes)
 						{
-							if (controlArray[coolNote.noteData])
-								goodNoteHit(coolNote);
-							else
-							{
-								var inIgnoreList:Bool = false;
-								for (shit in 0...ignoreList.length)
-								{
-									if (controlArray[ignoreList[shit]])
-										inIgnoreList = true;
-								}
-								if (!inIgnoreList)
-									badNoteCheck();
+							if (coolNote.noteData == daNote.noteData && Math.abs(daNote.strumTime - coolNote.strumTime) < 10)
+							{ // if it's the same note twice at < 10ms distance, just delete it
+								// EXCEPT u cant delete it in this loop cuz it fucks with the collection lol
+								dumbNotes.push(daNote);
+								break;
+							}
+							else if (coolNote.noteData == daNote.noteData && daNote.strumTime < coolNote.strumTime)
+							{ // if daNote is earlier than existing note (coolNote), replace
+								possibleNotes.remove(coolNote);
+								possibleNotes.push(daNote);
+								break;
 							}
 						}
 					}
-					else if (possibleNotes[0].noteData == possibleNotes[1].noteData)
-					{
-						noteCheck(controlArray[daNote.noteData], daNote);
-					}
 					else
 					{
-						for (coolNote in possibleNotes)
-						{
-							noteCheck(controlArray[coolNote.noteData], coolNote);
-						}
-					}
-				}
-				else // regular notes?
-				{
-					noteCheck(controlArray[daNote.noteData], daNote);
-				}
-				/*
-					if (controlArray[daNote.noteData])
-						goodNoteHit(daNote);
-				 */
-				// trace(daNote.noteData);
-				/*
-					switch (daNote.noteData)
-					{
-						case 2: // NOTES YOU JUST PRESSED
-							if (upP || rightP || downP || leftP)
-								noteCheck(upP, daNote);
-						case 3:
-							if (upP || rightP || downP || leftP)
-								noteCheck(rightP, daNote);
-						case 1:
-							if (upP || rightP || downP || leftP)
-								noteCheck(downP, daNote);
-						case 0:
-							if (upP || rightP || downP || leftP)
-								noteCheck(leftP, daNote);
-					}
-
-				//this is already done in noteCheck / goodNoteHit
-				if (daNote.wasGoodHit)
-				{
-					daNote.kill();
-					notes.remove(daNote, true);
-					daNote.destroy();
-				}
-				 */
-			}
-			else
-			{
-				badNoteCheck();
-			}
-		}
-
-		// if ((up || right || down || left) && !boyfriend.stunned && generatedMusic)
-		if ((up || right || down || left) && !inCutscene && !boyfriend.stunned && generatedMusic)
-		{
-			notes.forEachAlive(function(daNote:Note)
-			{
-				if (daNote.canBeHit && daNote.mustPress && daNote.isSustainNote)
-				{
-					switch (daNote.noteData)
-					{
-						// NOTES YOU ARE HOLDING
-						case 0:
-							if (left)
-								goodNoteHit(daNote);
-						case 1:
-							if (down)
-								goodNoteHit(daNote);
-						case 2:
-							if (up)
-								goodNoteHit(daNote);
-						case 3:
-							if (right)
-								goodNoteHit(daNote);
+						possibleNotes.push(daNote);
+						directionList.push(daNote.noteData);
 					}
 				}
 			});
+
+			for (note in dumbNotes)
+			{
+				FlxG.log.add("killing dumb ass note at " + note.strumTime);
+				note.kill();
+				notes.remove(note, true);
+				note.destroy();
+			}
+
+			possibleNotes.sort((a, b) -> Std.int(a.strumTime - b.strumTime));
+
+			if (perfectMode)
+				goodNoteHit(possibleNotes[0]);
+			else if (possibleNotes.length > 0)
+			{
+				for (shit in 0...pressArray.length)
+				{ // if a direction is hit that shouldn't be
+					if (pressArray[shit] && !directionList.contains(shit))
+						noteMiss(shit);
+				}
+				for (coolNote in possibleNotes)
+				{
+					if (pressArray[coolNote.noteData])
+						goodNoteHit(coolNote);
+				}
+			}
+			else
+			{
+				for (shit in 0...pressArray.length)
+					if (pressArray[shit])
+						noteMiss(shit);
+			}
 		}
 
-		if (boyfriend.holdTimer > Conductor.stepCrochet * 4 * 0.001 && !up && !down && !right && !left && curBeat % 2 == 0)
+		if (boyfriend.holdTimer > Conductor.stepCrochet * 4 * 0.001 && !holdArray.contains(true))
 		{
 			if (boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss'))
+			{
 				boyfriend.playAnim('idle');
+			}
 		}
 
 		playerStrums.forEach(function(spr:FlxSprite)
 		{
-			switch (spr.ID)
-			{
-				case 0:
-					if (leftP && spr.animation.curAnim.name != 'confirm')
-						spr.animation.play('pressed');
-					if (leftR)
-						spr.animation.play('static');
-				case 1:
-					if (downP && spr.animation.curAnim.name != 'confirm')
-						spr.animation.play('pressed');
-					if (downR)
-						spr.animation.play('static');
-				case 2:
-					if (upP && spr.animation.curAnim.name != 'confirm')
-						spr.animation.play('pressed');
-					if (upR)
-						spr.animation.play('static');
-				case 3:
-					if (rightP && spr.animation.curAnim.name != 'confirm')
-						spr.animation.play('pressed');
-					if (rightR)
-						spr.animation.play('static');
-			}
+			if (pressArray[spr.ID] && spr.animation.curAnim.name != 'confirm')
+				spr.animation.play('pressed');
+			if (!holdArray[spr.ID])
+				spr.animation.play('static');
 
 			if (spr.animation.curAnim.name == 'confirm' && !curStage.startsWith('school'))
 			{
@@ -2336,7 +2275,7 @@ class PlayState extends MusicBeatState
 		// commented out to fix train sound sometimes not playing
 		// thanks brubsby
 		// if (!trainSound.playing)
-			trainSound.play(true);
+		trainSound.play(true);
 	}
 
 	var startedMoving:Bool = false;
@@ -2397,12 +2336,12 @@ class PlayState extends MusicBeatState
 		// If the song doesn't have vocals, make it so that can get resynced as well
 		// if (SONG.needsVoices)
 		// {
-			// if (vocals.time > Conductor.songPosition + 20 || vocals.time < Conductor.songPosition - 20)
+		// if (vocals.time > Conductor.songPosition + 20 || vocals.time < Conductor.songPosition - 20)
 
-			if (FlxG.sound.music.time > Conductor.songPosition + 20 || FlxG.sound.music.time < Conductor.songPosition - 20)
-			{
-				resyncVocals();
-			}
+		if (FlxG.sound.music.time > Conductor.songPosition + 20 || FlxG.sound.music.time < Conductor.songPosition - 20)
+		{
+			resyncVocals();
+		}
 		// }
 
 		if (dad.curCharacter == 'spooky' && curStep % 4 == 2)
@@ -2475,11 +2414,11 @@ class PlayState extends MusicBeatState
 			gf.dance();
 		}
 
-		//if (!boyfriend.animation.curAnim.name.startsWith("sing"))
-		//{
+		// if (!boyfriend.animation.curAnim.name.startsWith("sing"))
+		// {
 		//	// boyfriend.playAnim('idle');
 		//	boyfriend.dance();
-		//}
+		// }
 
 		if (curBeat % 8 == 7 && curSong == 'Bopeebo')
 		{
