@@ -65,8 +65,7 @@ class TitleState extends MusicBeatState
 		// trace('NEWGROUNDS LOL');
 		#end
 
-		// FlxG.save.bind('funkin', 'ninjamuffin99');
-		FlxG.save.bind('funkinrip', 'ninjamuffin99');
+		FlxG.save.bind('funkinrip', 'mandm');
 
 		Highscore.load();
 

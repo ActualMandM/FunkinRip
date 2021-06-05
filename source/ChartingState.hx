@@ -132,8 +132,7 @@ class ChartingState extends MusicBeatState
 			_song.stage = PlayState.curStage;
 
 		FlxG.mouse.visible = true;
-		// FlxG.save.bind('funkin', 'ninjamuffin99');
-		FlxG.save.bind('funkinrip', 'ninjamuffin99');
+		FlxG.save.bind('funkinrip', 'mandm');
 
 		tempBpm = _song.bpm;
 
