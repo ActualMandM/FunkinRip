@@ -990,7 +990,7 @@ class PlayState extends MusicBeatState
 
 			swagCounter += 1;
 			// generateSong('fresh');
-		}, 5);
+		}, 4);
 	}
 
 	var previousFrameTime:Int = 0;
@@ -1008,6 +1008,13 @@ class PlayState extends MusicBeatState
 			FlxG.sound.playMusic("assets/music/" + SONG.song + "_Inst" + TitleState.soundExt, 1, false);
 		FlxG.sound.music.onComplete = endSong;
 		vocals.play();
+
+		// have them all dance when the song starts
+		gf.dance();
+		if (!boyfriend.animation.curAnim.name.startsWith("sing"))
+			boyfriend.dance();
+		if (!dad.animation.curAnim.name.startsWith("sing"))
+			dad.dance();
 	}
 
 	var debugNum:Int = 0;
