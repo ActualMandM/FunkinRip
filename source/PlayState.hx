@@ -85,6 +85,7 @@ class PlayState extends MusicBeatState
 
 	private var generatedMusic:Bool = false;
 	private var startingSong:Bool = false;
+	private var vocalsFinished:Bool = false;
 
 	private var iconP1:HealthIcon;
 	private var iconP2:HealthIcon;
@@ -889,7 +890,7 @@ class PlayState extends MusicBeatState
 		startTimer = new FlxTimer().start(Conductor.crochet / 1000, function(tmr:FlxTimer)
 		{
 			// this just based on beatHit stuff but compact
-			if (swagCounter % gfSpeed == 0 && swagCounter < 4)
+			if (swagCounter % gfSpeed == 0)
 				gf.dance();
 			if (swagCounter % 2 == 0)
 			{
@@ -985,7 +986,6 @@ class PlayState extends MusicBeatState
 						}
 					});
 					FlxG.sound.play('assets/sounds/introGo' + altSuffix + TitleState.soundExt, 0.6);
-				case 4:
 			}
 
 			swagCounter += 1;
@@ -1032,6 +1032,11 @@ class PlayState extends MusicBeatState
 			vocals = new FlxSound().loadEmbedded("assets/music/" + curSong + "_Voices" + TitleState.soundExt);
 		else
 			vocals = new FlxSound();
+
+		vocals.onComplete = function()
+		{
+			vocalsFinished = true;
+		}
 
 		FlxG.sound.list.add(vocals);
 
@@ -1266,10 +1271,16 @@ class PlayState extends MusicBeatState
 
 	function resyncVocals():Void
 	{
-		vocals.pause();
+		if (_exiting)
+			return;
 
+		vocals.pause();
 		FlxG.sound.music.play();
 		Conductor.songPosition = FlxG.sound.music.time;
+		
+		if (vocalsFinished)
+			return;
+
 		vocals.time = Conductor.songPosition;
 		vocals.play();
 	}
