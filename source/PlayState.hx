@@ -899,7 +899,7 @@ class PlayState extends MusicBeatState
 				if (!dad.animation.curAnim.name.startsWith("sing"))
 					dad.dance();
 			}
-			else if (dad.curCharacter == 'spooky' && !dad.animation.curAnim.name.startsWith("sing"))
+			else if ((dad.curCharacter == 'spooky' || dad.curCharacter == 'gf') && !dad.animation.curAnim.name.startsWith("sing"))
 				dad.dance();
 
 			var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
