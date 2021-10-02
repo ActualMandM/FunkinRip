@@ -1817,10 +1817,11 @@ class PlayState extends MusicBeatState
 		rating.updateHitbox();
 
 		var seperatedScore:Array<Int> = [];
+		var comboDisplay:Int = combo + 1;
 
-		seperatedScore.push(Math.floor(combo / 100));
-		seperatedScore.push(Math.floor((combo - (seperatedScore[0] * 100)) / 10));
-		seperatedScore.push(combo % 10);
+		seperatedScore.push(Math.floor(comboDisplay / 100));
+		seperatedScore.push(Math.floor((comboDisplay - (seperatedScore[0] * 100)) / 10));
+		seperatedScore.push(comboDisplay % 10);
 
 		var daLoop:Int = 0;
 		for (i in seperatedScore)
@@ -1845,7 +1846,7 @@ class PlayState extends MusicBeatState
 			numScore.velocity.y -= FlxG.random.int(140, 160);
 			numScore.velocity.x = FlxG.random.float(-5, 5);
 
-			if (combo >= 10 || combo == 0)
+			if (comboDisplay >= 10)
 				add(numScore);
 
 			FlxTween.tween(numScore, {alpha: 0}, 0.2, {
