@@ -130,12 +130,14 @@ class Character extends FlxSprite
 				animation.addByPrefix('singRIGHT', 'Dad Sing Note RIGHT', 24);
 				animation.addByPrefix('singDOWN', 'Dad Sing Note DOWN', 24);
 				animation.addByPrefix('singLEFT', 'Dad Sing Note LEFT', 24);
+				animation.addByIndices('idleLoop', "Dad idle dance", [11, 12], "", 12, true);
 
 				addOffset('idle');
 				addOffset("singUP", -6, 50);
 				addOffset("singRIGHT", 0, 27);
 				addOffset("singLEFT", -10, 10);
 				addOffset("singDOWN", 0, -30);
+				addOffset('idleLoop');
 
 				playAnim('idle');
 			case 'spooky':
@@ -168,12 +170,14 @@ class Character extends FlxSprite
 				// ANIMATION IS CALLED MOM LEFT POSE BUT ITS FOR THE RIGHT
 				// CUZ DAVE IS DUMB!
 				animation.addByPrefix('singRIGHT', 'Mom Pose Left', 24, false);
+				animation.addByIndices('idleLoop', "Mom Idle", [11, 12], "", 12, true);
 
 				addOffset('idle');
 				addOffset("singUP", 14, 71);
 				addOffset("singRIGHT", 10, -60);
 				addOffset("singLEFT", 250, -23);
 				addOffset("singDOWN", 20, -160);
+				addOffset('idleLoop');
 
 				playAnim('idle');
 
@@ -188,14 +192,14 @@ class Character extends FlxSprite
 				// ANIMATION IS CALLED MOM LEFT POSE BUT ITS FOR THE RIGHT
 				// CUZ DAVE IS DUMB!
 				animation.addByPrefix('singRIGHT', 'Mom Pose Left', 24, false);
-				animation.addByIndices('idleHair', "Mom Idle", [10, 11, 12, 13], "", 24, true);
+				animation.addByIndices('idleLoop', "Mom Idle", [10, 11, 12, 13], "", 24, true);
 
 				addOffset('idle');
 				addOffset("singUP", 14, 71);
 				addOffset("singRIGHT", 10, -60);
 				addOffset("singLEFT", 250, -23);
 				addOffset("singDOWN", 20, -160);
-				addOffset('idleHair');
+				addOffset('idleLoop');
 
 				playAnim('idle');
 			case 'monster':
@@ -346,7 +350,7 @@ class Character extends FlxSprite
 				animation.addByPrefix('singLEFTmiss', 'BF NOTE LEFT MISS', 24, false);
 				animation.addByPrefix('singRIGHTmiss', 'BF NOTE RIGHT MISS', 24, false);
 				animation.addByPrefix('singDOWNmiss', 'BF NOTE DOWN MISS', 24, false);
-				animation.addByIndices('idleHair', 'BF idle dance', [10, 11, 12, 13], "", 24, true);
+				animation.addByIndices('idleLoop', 'BF idle dance', [10, 11, 12, 13], "", 24, true);
 
 				addOffset('idle', -5);
 				addOffset("singUP", -29, 27);
@@ -357,7 +361,7 @@ class Character extends FlxSprite
 				addOffset("singRIGHTmiss", -30, 21);
 				addOffset("singLEFTmiss", 12, 24);
 				addOffset("singDOWNmiss", -11, -19);
-				addOffset('idleHair', -5);
+				addOffset('idleLoop', -5);
 				playAnim('idle');
 
 				flipX = true;
@@ -487,6 +491,7 @@ class Character extends FlxSprite
 				animation.addByPrefix('singDOWN-alt', 'Parent Down Note Mom', 24, false);
 				animation.addByPrefix('singLEFT-alt', 'Parent Left Note Mom', 24, false);
 				animation.addByPrefix('singRIGHT-alt', 'Parent Right Note Mom', 24, false);
+				animation.addByIndices('idleLoop', "Parent Christmas Idle", [11, 12], "", 12, true);
 
 				addOffset('idle');
 				addOffset("singUP", -47, 24);
@@ -497,6 +502,7 @@ class Character extends FlxSprite
 				addOffset("singRIGHT-alt", -1, -24);
 				addOffset("singLEFT-alt", -30, 15);
 				addOffset("singDOWN-alt", -30, -27);
+				addOffset('idleLoop');
 
 				playAnim('idle');
 		}
@@ -546,11 +552,11 @@ class Character extends FlxSprite
 			}
 		}
 
-		if (curCharacter.endsWith('-car'))
+		if (animation.getByName('idleLoop') != null)
 		{
 			// looping hair anims after idle finished
 			if (!animation.curAnim.name.startsWith('sing') && animation.curAnim.finished)
-				playAnim('idleHair');
+				playAnim('idleLoop');
 		}
 
 		switch (curCharacter)
