@@ -894,12 +894,11 @@ class PlayState extends MusicBeatState
 				gf.dance();
 			if (swagCounter % 2 == 0)
 			{
-				if (!boyfriend.animation.curAnim.name.startsWith("sing"))
+				if (!boyfriend.animation.curAnim.name.endsWith("miss"))
 					boyfriend.dance();
-				if (!dad.animation.curAnim.name.startsWith("sing"))
-					dad.dance();
+				dad.dance();
 			}
-			else if ((dad.curCharacter == 'spooky' || dad.curCharacter == 'gf') && !dad.animation.curAnim.name.startsWith("sing"))
+			else if (dad.curCharacter == 'spooky' || dad.curCharacter == 'gf')
 				dad.dance();
 
 			var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
@@ -2393,7 +2392,7 @@ class PlayState extends MusicBeatState
 				if (!boyfriend.animation.curAnim.name.startsWith('sing'))
 					boyfriend.dance();
 			}
-			else if (dad.curCharacter == 'spooky' || dad.curCharacter == 'gf')
+			else if ((dad.curCharacter == 'spooky' || dad.curCharacter == 'gf') && !dad.animation.curAnim.name.startsWith('sing'))
 				dad.dance();
 		}
 		// FlxG.log.add('change bpm' + SONG.notes[Std.int(curStep / 16)].changeBPM);

@@ -188,12 +188,14 @@ class Character extends FlxSprite
 				// ANIMATION IS CALLED MOM LEFT POSE BUT ITS FOR THE RIGHT
 				// CUZ DAVE IS DUMB!
 				animation.addByPrefix('singRIGHT', 'Mom Pose Left', 24, false);
+				animation.addByIndices('idleHair', "Mom Idle", [10, 11, 12, 13], "", 24, true);
 
 				addOffset('idle');
 				addOffset("singUP", 14, 71);
 				addOffset("singRIGHT", 10, -60);
 				addOffset("singLEFT", 250, -23);
 				addOffset("singDOWN", 20, -160);
+				addOffset('idleHair');
 
 				playAnim('idle');
 			case 'monster':
@@ -344,6 +346,7 @@ class Character extends FlxSprite
 				animation.addByPrefix('singLEFTmiss', 'BF NOTE LEFT MISS', 24, false);
 				animation.addByPrefix('singRIGHTmiss', 'BF NOTE RIGHT MISS', 24, false);
 				animation.addByPrefix('singDOWNmiss', 'BF NOTE DOWN MISS', 24, false);
+				animation.addByIndices('idleHair', 'BF idle dance', [10, 11, 12, 13], "", 24, true);
 
 				addOffset('idle', -5);
 				addOffset("singUP", -29, 27);
@@ -354,6 +357,7 @@ class Character extends FlxSprite
 				addOffset("singRIGHTmiss", -30, 21);
 				addOffset("singLEFTmiss", 12, 24);
 				addOffset("singDOWNmiss", -11, -19);
+				addOffset('idleHair', -5);
 				playAnim('idle');
 
 				flipX = true;
@@ -524,7 +528,7 @@ class Character extends FlxSprite
 
 	override function update(elapsed:Float)
 	{
-		if (!curCharacter.startsWith('bf'))
+		if (!isPlayer)
 		{
 			if (animation.curAnim.name.startsWith('sing'))
 			{
@@ -540,6 +544,13 @@ class Character extends FlxSprite
 				dance();
 				holdTimer = 0;
 			}
+		}
+
+		if (curCharacter.endsWith('-car'))
+		{
+			// looping hair anims after idle finished
+			if (!animation.curAnim.name.startsWith('sing') && animation.curAnim.finished)
+				playAnim('idleHair');
 		}
 
 		switch (curCharacter)
