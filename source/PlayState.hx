@@ -2351,20 +2351,13 @@ class PlayState extends MusicBeatState
 	override function stepHit()
 	{
 		super.stepHit();
-		// If the song doesn't have vocals, make it so that can get resynced as well
-		// if (SONG.needsVoices)
-		// {
-		// if (vocals.time > Conductor.songPosition + 20 || vocals.time < Conductor.songPosition - 20)
 
-		if (FlxG.sound.music.time > Conductor.songPosition + 20 || FlxG.sound.music.time < Conductor.songPosition - 20)
+		// can be formatted better; currently just copy-pasted from compiled js with fixes to compile
+		if (20 < Math.abs(FlxG.sound.music.time - (Conductor.songPosition - Conductor.offset))
+			|| SONG.needsVoices
+			&& 20 < Math.abs(vocals.time - (Conductor.songPosition - Conductor.offset)))
 		{
 			resyncVocals();
-		}
-		// }
-
-		if (dad.curCharacter == 'spooky' && curStep % 4 == 2)
-		{
-			// dad.dance();
 		}
 	}
 
